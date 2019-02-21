@@ -161,12 +161,13 @@ int main(int argc, char** argv)
     // Creating an instance of class Player
     tmadeira_ns::MyPlayer player1 = tmadeira_ns::MyPlayer(player_name, "red");
 
-    cout << "Created an instance of class Player with public name " << player1.getName() << " of team " << player1.getTeamName() << "!" << endl;
+    //cout << "Created an instance of class Player with public name " << player1.getName() << " of team " << player1.getTeamName() << "!" << endl;
     player1.printInfo();
 
     // Create a team
     tmadeira_ns::Team team_red("red");
 
+    /*
     // Life cycle
     while(ros::ok())
     {
@@ -185,4 +186,5 @@ int main(int argc, char** argv)
         // Sleep one second
         ros::Duration(1).sleep();
     }
+     */
 }
