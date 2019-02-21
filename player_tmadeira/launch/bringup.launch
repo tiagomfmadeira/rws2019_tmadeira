@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- -->
+<launch>
+    <!-- <arg name="delay" default="5"/>-->
+    <!-- teams -->
+    <!-- team red -->
+    <!--<node name="jnogueira" pkg="player_jnogueira" type="player_jnogueira_node" respawn="true" output="screen"/>-->
+    <node name="tmadeira" pkg="player_tmadeira" type="player_tmadeira_node" respawn="true" output="screen"/>
+    <!--<node name="talmeida" pkg="player_talmeida" type="player_talmeida_node" respawn="true" output="screen"/>-->
+    <!-- team green -->
+
+    <!-- team blue  -->
+
+    <!-- end teams -->
+
+    <!--Load the parameters-->
+    <rosparam command="load" file="$(find player_tmadeira)/params/params.yaml"/>
+
+</launch>
