@@ -151,8 +151,8 @@ namespace tmadeira_ns {
                 setTeamName(team_mine->getName());
 
                 //define intial position
-                float sx = randomizePosition();
-                float sy = randomizePosition();
+                float sx = randomizePosition(8736);
+                float sy = randomizePosition(3468);
                 tf::Transform T;
                 T.setOrigin( tf::Vector3(sx, sy, 0.0) );
                 tf::Quaternion q;
@@ -365,9 +365,9 @@ namespace tmadeira_ns {
             boost::shared_ptr<ros::Publisher> vis_pub;
             boost::shared_ptr<ros::Publisher> bocas_pub;
 
-            float randomizePosition()
+            float randomizePosition(int seed)
             {
-                srand(3483*time(NULL)); // set initial seed value to 5323
+                srand(seed*time(NULL)); // set initial seed value to 5323
                 return (((double)rand() / (RAND_MAX)) - 0.5) * 10;
             }
 
