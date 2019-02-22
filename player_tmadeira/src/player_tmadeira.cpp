@@ -144,17 +144,17 @@ namespace tmadeira_ns {
                 //define intial position
                 float sx = randomizePosition();
                 float sy = randomizePosition();
-                tf::Transform T1;
-                T1.setOrigin( tf::Vector3(sx, sy, 0.0) );
+                tf::Transform T;
+                T.setOrigin( tf::Vector3(sx, sy, 0.0) );
                 tf::Quaternion q;
                 q.setRPY(0, 0, M_PI);
-                T1.setRotation(q);
+                T.setRotation(q);
 
                 //define global movement
-                tf::Transform Tglobal = T1;
-                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
+                tf::Transform Tglobal = T;
+                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", name));
                 ros::Duration(0.1).sleep();
-                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
+                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", name));
 
                 //printInfo();
             }
@@ -168,13 +168,12 @@ namespace tmadeira_ns {
             void makeAPlayCallBack(rws2019_msgs::MakeAPlayConstPtr msg)
             {
                 ROS_INFO("Received a new msg");
-                static tf::TransformListener ls;
 
                 // Determine where player is
                 tf::StampedTransform T0;
                 try
                 {
-                    ls.lookupTransform("/world", this->getName(), ros::Time(0), T0);
+                    listener.lookupTransform("/world", this->getName(), ros::Time(0), T0);
                 }
                 catch (tf::TransformException ex)
                 {
@@ -201,7 +200,7 @@ namespace tmadeira_ns {
                 T1.setRotation(q);
 
                 // Calculate movement in world
-                tf::Transform Tglobal = T0*T1;
+                tf::Transform Tglobal = T0 * T1;
                 br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
 
                 visualization_msgs::Marker marker;
@@ -239,7 +238,10 @@ namespace tmadeira_ns {
             boost::shared_ptr<Team> team_hunters;
             boost::shared_ptr<Team> team_mine;
             boost::shared_ptr<Team> team_prey;
+
+            tf::TransformListener listener;
             tf::TransformBroadcaster br;
+
             boost::shared_ptr<ros::Publisher> vis_pub;
 
             float randomizePosition()
@@ -253,13 +255,14 @@ namespace tmadeira_ns {
 
 int main(int argc, char** argv)
 {
+    string player_name = "tmadeira";
+
     // Initialize node
-    init(argc, argv, "player_tmadeira");
+    init(argc, argv, player_name);
     NodeHandle n;
 
-    string player_name = "tmadeira";
     // Creating an instance of class Player
-    tmadeira_ns::MyPlayer player1 = tmadeira_ns::MyPlayer(player_name, "red");
+    tmadeira_ns::MyPlayer player1(player_name, "red");
 
     // Create a team
     tmadeira_ns::Team team_red("red");
