@@ -4,6 +4,7 @@
 #include <rws2019_msgs/MakeAPlay.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 
 using namespace std;
 using namespace boost;
@@ -114,6 +115,10 @@ namespace tmadeira_ns {
                 team_green = (boost::shared_ptr<Team>) new Team("green");
                 team_blue = (boost::shared_ptr<Team>) new Team("blue");
 
+                ros::NodeHandle n;
+                vis_pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+                *vis_pub = n.advertise<visualization_msgs::Marker>("player_names", 0);
+
                 if(team_red->playerBelongsToTeam(name))
                 {
                     team_mine = team_red;
@@ -148,6 +153,9 @@ namespace tmadeira_ns {
                 //define global movement
                 tf::Transform Tglobal = T1;
                 br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
+                ros::Duration(0.1).sleep();
+                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
+
                 //printInfo();
             }
 
@@ -160,13 +168,13 @@ namespace tmadeira_ns {
             void makeAPlayCallBack(rws2019_msgs::MakeAPlayConstPtr msg)
             {
                 ROS_INFO("Received a new msg");
+                static tf::TransformListener ls;
 
                 // Determine where player is
                 tf::StampedTransform T0;
-                static tf::TransformListener listener;
                 try
                 {
-                    listener.lookupTransform("/world", this->getName(), ros::Time(0), T0);
+                    ls.lookupTransform("/world", this->getName(), ros::Time(0), T0);
                 }
                 catch (tf::TransformException ex)
                 {
@@ -177,7 +185,7 @@ namespace tmadeira_ns {
                 // Define strategy of movement
                 //TODO:
                 float dx = 0.1;
-                float angle = M_PI/6;
+                float angle = M_PI;
 
                 float dx_max = msg->turtle;
                 dx > dx_max ? dx = dx_max : dx = dx;
@@ -195,6 +203,33 @@ namespace tmadeira_ns {
                 // Calculate movement in world
                 tf::Transform Tglobal = T0*T1;
                 br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
+
+                visualization_msgs::Marker marker;
+                marker.header.frame_id = this->getName();
+                marker.header.stamp = ros::Time();
+                marker.ns = this->getName();
+                marker.id = 0;
+                marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+                marker.action = visualization_msgs::Marker::ADD;
+//            marker.pose.position.x = 1;
+//            marker.pose.position.y = 1;
+//            marker.pose.position.z = 1;
+//            marker.pose.orientation.x = 0.0;
+//            marker.pose.orientation.y = 0.0;
+//            marker.pose.orientation.z = 0.0;
+//            marker.pose.orientation.w = 1.0;
+//            marker.scale.x = ;
+//            marker.scale.y = 0.1;
+                marker.scale.z = 0.6;
+                marker.color.a = 1.0; // Don't forget to set the alpha!
+                marker.color.r = 0.0;
+                marker.color.g = 0.0;
+                marker.color.b = 1.0;
+                marker.text = this->getName();
+
+//only if using a MESH_RESOURCE marker type:
+//            marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
+                vis_pub->publish( marker );
             }
 
         private:
@@ -205,10 +240,11 @@ namespace tmadeira_ns {
             boost::shared_ptr<Team> team_mine;
             boost::shared_ptr<Team> team_prey;
             tf::TransformBroadcaster br;
+            boost::shared_ptr<ros::Publisher> vis_pub;
 
             float randomizePosition()
             {
-                srand(6832*time(NULL)); // set initial seed value to 5323
+                srand(3483*time(NULL)); // set initial seed value to 5323
                 return (((double)rand() / (RAND_MAX)) - 0.5) * 10;
             }
 
