@@ -171,6 +171,11 @@ namespace tmadeira_ns {
                 ROS_INFO_STREAM("I am hunting " << team_prey->getName() << " and fleeing from " << team_hunters->getName());
             }
 
+            std::tuple<float, float> getDistanceAndAngleToArenaCenter()
+            {
+                return getDistanceAndAngleToPlayer("world");
+            }
+
             std::tuple<float, float> getDistanceAndAngleToPlayer(string other_player)
             {
                 tf::StampedTransform T0;
@@ -207,32 +212,44 @@ namespace tmadeira_ns {
                 // Define strategy of movement
                 //TODO:
 
-                vector<float> distance_to_preys;
-                vector<float> angle_to_preys;
+                vector<float> distance_to_prey;
+                vector<float> angle_to_prey;
                 //For each prey find the closest. Then follow it
                 for (size_t i =0; i< team_prey->getPlayerNames().size(); i++)
                 {
                     ROS_WARN_STREAM("team_preys = " << team_prey->getPlayerNames()[i]);
 
                     std::tuple<float, float> t = getDistanceAndAngleToPlayer(team_prey->getPlayerNames()[i]);
-                    distance_to_preys.push_back( std::get<0>(t));
-                    angle_to_preys.push_back( std::get<1>(t));
+                    distance_to_prey.push_back( std::get<0>(t));
+                    angle_to_prey.push_back( std::get<1>(t));
                 }
 
                 //compute closest prey
                 int idx_closest_prey = 0;
                 float distance_closest_prey = 1000;
-                for (size_t i =0; i< distance_to_preys.size(); i++)
+                for (size_t i =0; i< distance_to_prey.size(); i++)
                 {
-                    if (distance_to_preys[i] < distance_closest_prey)
+                    if (distance_to_prey[i] < distance_closest_prey)
                     {
                         idx_closest_prey = i;
-                        distance_closest_prey = distance_to_preys[i];
+                        distance_closest_prey = distance_to_prey[i];
                     }
                 }
 
                 float dx = 10;
-                float angle = angle_to_preys[idx_closest_prey];
+                float angle = angle_to_prey[idx_closest_prey];
+
+                float distance_to_arena_center;
+                float angle_to_arena_center;
+                // get leach
+                std::tuple<float, float> t = getDistanceAndAngleToArenaCenter();
+                distance_to_arena_center = std::get<0>(t);
+                angle_to_arena_center = std::get<1>(t);
+
+                if (distance_to_arena_center > 4.9)
+                {
+                    angle = 1000;
+                }
 
                 float dx_max = msg->turtle;
                 dx > dx_max ? dx = dx_max : dx = dx;
