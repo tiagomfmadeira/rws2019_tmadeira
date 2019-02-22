@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <rws2019_msgs/MakeAPlay.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 using namespace std;
 using namespace boost;
@@ -134,6 +135,20 @@ namespace tmadeira_ns {
                 }
 
                 setTeamName(team_mine->getName());
+
+                //define intial position
+                float sx = randomizePosition();
+                float sy = randomizePosition();
+                tf::Transform T1;
+                T1.setOrigin( tf::Vector3(sx, sy, 0.0) );
+                tf::Quaternion q;
+                q.setRPY(0, 0, M_PI);
+                T1.setRotation(q);
+
+                //define global movement
+                tf::Transform Tglobal = T1;
+                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
+                //printInfo();
             }
 
             void printInfo()
@@ -146,25 +161,50 @@ namespace tmadeira_ns {
             {
                 ROS_INFO("Received a new msg");
 
-                // Publish the tranformation
-                static tf::TransformBroadcaster br;
+                // Determine where player is
+                tf::StampedTransform T0;
+                static tf::TransformListener listener;
+                try
+                {
+                    listener.lookupTransform("/world", this->getName(), ros::Time(0), T0);
+                }
+                catch (tf::TransformException ex)
+                {
+                    ROS_ERROR("%s",ex.what());
+                    ros::Duration(0.1).sleep();
+                }
 
-                tf::Transform transform1;
-                transform1.setOrigin( tf::Vector3(1.0, 2.0, 0.0) );
+                // Define strategy of movement
+                //TODO:
+                float dx = 0.1;
+                float angle = M_PI/6;
+
+                // Define movement in own referential
+                tf::Transform T1;
+                T1.setOrigin( tf::Vector3(dx, 0.0, 0.0) );
                 tf::Quaternion q;
-                q.setRPY(0, 0, 0);
-                transform1.setRotation(q);
+                q.setRPY(0, 0, angle);
+                T1.setRotation(q);
 
-                br.sendTransform(tf::StampedTransform(transform1, ros::Time::now(), "world", this->getName()));
+                // Calculate movement in world
+                tf::Transform Tglobal = T0*T1;
+                br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
             }
 
-        private:
+    private:
             boost::shared_ptr<Team> team_red;
             boost::shared_ptr<Team> team_blue;
             boost::shared_ptr<Team> team_green;
             boost::shared_ptr<Team> team_hunters;
             boost::shared_ptr<Team> team_mine;
             boost::shared_ptr<Team> team_prey;
+            tf::TransformBroadcaster br;
+
+            float randomizePosition()
+            {
+                srand(6832*time(NULL)); // set initial seed value to 5323
+                return (((double)rand() / (RAND_MAX)) - 0.5) * 10;
+            }
 
     };
 }
@@ -184,14 +224,11 @@ int main(int argc, char** argv)
 
     Subscriber sub = n.subscribe("/make_a_play", 100, &tmadeira_ns::MyPlayer::makeAPlayCallBack, &player1);
 
+    ros::Rate r(20);
     // Life cycle
     while(ros::ok())
     {
-
-        // Sleep one second
-        Duration(1).sleep();
-        player1.printInfo();
         spinOnce();
-
+        r.sleep();
     }
 }
