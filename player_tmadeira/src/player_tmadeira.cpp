@@ -32,7 +32,7 @@ namespace tmadeira_ns {
             {
                 cout << "Team " << name << " has players: " << endl;
 
-                for (int i = 0; i < player_names.size(); ++i)
+                for (int i = 0; i < player_names.size(); i++)
                 {
                     cout << "Player " << i << ": " << player_names[i] << " " << endl;
                 }
@@ -51,6 +51,12 @@ namespace tmadeira_ns {
             string getName()
             {
                 return this->name;
+            }
+
+            // Getter for team name
+            vector<string> getPlayerNames()
+            {
+                return this->player_names;
             }
 
 
@@ -165,6 +171,23 @@ namespace tmadeira_ns {
                 ROS_INFO_STREAM("I am hunting " << team_prey->getName() << " and fleeing from " << team_hunters->getName());
             }
 
+            std::tuple<float, float> getDistanceAndAngleToPlayer(string other_player)
+            {
+                tf::StampedTransform T0;
+                try{
+                    listener.lookupTransform(this->getName(), other_player, ros::Time(0), T0);
+                }
+                catch (tf::TransformException ex){
+                    ROS_ERROR("%s",ex.what());
+                    ros::Duration(0.01).sleep();
+                    return {1000.0, 0.0};
+                }
+
+                float d = sqrt(T0.getOrigin().x() * T0.getOrigin().x() + T0.getOrigin().y() * T0.getOrigin().y() );
+                float a = atan2( T0.getOrigin().y(), T0.getOrigin().x());
+                return {d,a};
+            }
+
             void makeAPlayCallBack(rws2019_msgs::MakeAPlayConstPtr msg)
             {
                 ROS_INFO("Received a new msg");
@@ -183,8 +206,33 @@ namespace tmadeira_ns {
 
                 // Define strategy of movement
                 //TODO:
-                float dx = 0.1;
-                float angle = M_PI;
+
+                vector<float> distance_to_preys;
+                vector<float> angle_to_preys;
+                //For each prey find the closest. Then follow it
+                for (size_t i =0; i< team_prey->getPlayerNames().size(); i++)
+                {
+                    ROS_WARN_STREAM("team_preys = " << team_prey->getPlayerNames()[i]);
+
+                    std::tuple<float, float> t = getDistanceAndAngleToPlayer(team_prey->getPlayerNames()[i]);
+                    distance_to_preys.push_back( std::get<0>(t));
+                    angle_to_preys.push_back( std::get<1>(t));
+                }
+
+                //compute closest prey
+                int idx_closest_prey = 0;
+                float distance_closest_prey = 1000;
+                for (size_t i =0; i< distance_to_preys.size(); i++)
+                {
+                    if (distance_to_preys[i] < distance_closest_prey)
+                    {
+                        idx_closest_prey = i;
+                        distance_closest_prey = distance_to_preys[i];
+                    }
+                }
+
+                float dx = 10;
+                float angle = angle_to_preys[idx_closest_prey];
 
                 float dx_max = msg->turtle;
                 dx > dx_max ? dx = dx_max : dx = dx;
@@ -210,15 +258,6 @@ namespace tmadeira_ns {
                 marker.id = 0;
                 marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
                 marker.action = visualization_msgs::Marker::ADD;
-//            marker.pose.position.x = 1;
-//            marker.pose.position.y = 1;
-//            marker.pose.position.z = 1;
-//            marker.pose.orientation.x = 0.0;
-//            marker.pose.orientation.y = 0.0;
-//            marker.pose.orientation.z = 0.0;
-//            marker.pose.orientation.w = 1.0;
-//            marker.scale.x = ;
-//            marker.scale.y = 0.1;
                 marker.scale.z = 0.6;
                 marker.color.a = 1.0; // Don't forget to set the alpha!
                 marker.color.r = 1.0;
@@ -226,8 +265,6 @@ namespace tmadeira_ns {
                 marker.color.b = 0.0;
                 marker.text = this->getName();
 
-//only if using a MESH_RESOURCE marker type:
-//            marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
                 vis_pub->publish( marker );
             }
 
