@@ -250,9 +250,9 @@ namespace tmadeira_ns {
                 distance_to_arena_center = std::get<0>(t);
                 angle_to_arena_center = std::get<1>(t);
 
-                if (distance_to_arena_center > 4.9)
+                if (distance_to_arena_center > 7)
                 {
-                    angle = angle * 2;
+                    angle = angle * M_PI/30;
                 }
 
                 float dx_max = msg->turtle;
