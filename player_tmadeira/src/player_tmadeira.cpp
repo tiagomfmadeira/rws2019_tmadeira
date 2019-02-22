@@ -248,7 +248,7 @@ namespace tmadeira_ns {
 
                 if (distance_to_arena_center > 4.9)
                 {
-                    angle = 1000;
+                    angle = angle * 2;
                 }
 
                 float dx_max = msg->turtle;
