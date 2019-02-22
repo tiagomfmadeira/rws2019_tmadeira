@@ -212,12 +212,17 @@ namespace tmadeira_ns {
                     ros::Duration(0.1).sleep();
                 }
 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Define strategy of movement
-                //TODO:
+                // TODO:
 
+                // Find out which prey are alive
+
+
+
+                // Compute closest prey
                 vector<float> distance_to_prey;
                 vector<float> angle_to_prey;
-                //For each prey find the closest. Then follow it
                 for (size_t i =0; i< team_prey->getPlayerNames().size(); i++)
                 {
                     ROS_WARN_STREAM("team_preys = " << team_prey->getPlayerNames()[i]);
@@ -227,7 +232,6 @@ namespace tmadeira_ns {
                     angle_to_prey.push_back( std::get<1>(t));
                 }
 
-                //compute closest prey
                 int idx_closest_prey = 0;
                 float distance_closest_prey = 1000;
                 for (size_t i =0; i< distance_to_prey.size(); i++)
@@ -241,8 +245,46 @@ namespace tmadeira_ns {
 
                 float dx = 10;
                 float angle = angle_to_prey[idx_closest_prey];
-                string prey_name = team_prey->getPlayerNames()[idx_closest_prey];
+                string boca = "Coming for " + team_prey->getPlayerNames()[idx_closest_prey];
 
+                ///////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Compute closest hunter
+                vector<float> distance_to_hunter;
+                vector<float> angle_to_hunter;
+                for (size_t i =0; i< team_hunters->getPlayerNames().size(); i++)
+                {
+                    ROS_WARN_STREAM("team_hunters = " << team_hunters->getPlayerNames()[i]);
+
+                    std::tuple<float, float> t = getDistanceAndAngleToPlayer(team_hunters->getPlayerNames()[i]);
+                    distance_to_hunter.push_back( std::get<0>(t));
+                    angle_to_hunter.push_back( std::get<1>(t));
+                }
+
+                int idx_closest_hunter = 0;
+                float distance_closest_hunter = 1000;
+                for (size_t i =0; i< distance_to_hunter.size(); i++)
+                {
+                    if (distance_to_hunter[i] < distance_closest_hunter)
+                    {
+                        idx_closest_hunter = i;
+                        distance_closest_hunter = distance_to_hunter[i];
+                    }
+                }
+
+                float angleToHunter = angle_to_hunter[idx_closest_hunter];
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Compare prey distance to hunter distance
+
+                if (distance_closest_hunter < distance_closest_prey)
+                {
+                    float angle = -angle_to_hunter[idx_closest_prey];
+                    boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_prey];
+                }
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                // Compute distance to arena center
                 float distance_to_arena_center;
                 float angle_to_arena_center;
                 // get leach
@@ -252,9 +294,11 @@ namespace tmadeira_ns {
 
                 if (distance_to_arena_center > 7)
                 {
-                    angle = angle * M_PI/30;
+                    // turn the maximum possible
+                    angle = (angle * M_PI/30) / fabs(angle);
                 }
 
+                // Movement restrictions
                 float dx_max = msg->turtle;
                 dx > dx_max ? dx = dx_max : dx = dx;
 
@@ -302,7 +346,7 @@ namespace tmadeira_ns {
                 bocas_marker.color.r = 0.0;
                 bocas_marker.color.g = 0.0;
                 bocas_marker.color.b = 0.0;
-                bocas_marker.text = "I'm coming for " + prey_name;
+                bocas_marker.text = boca;
 
                 bocas_pub->publish( bocas_marker );
             }
