@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ros/ros.h>
 #include <rws2019_msgs/MakeAPlay.h>
+#include <tf/transform_broadcaster.h>
 
 using namespace std;
 using namespace boost;
@@ -144,6 +145,17 @@ namespace tmadeira_ns {
             void makeAPlayCallBack(rws2019_msgs::MakeAPlayConstPtr msg)
             {
                 ROS_INFO("Received a new msg");
+
+                // Publish the tranformation
+                static tf::TransformBroadcaster br;
+
+                tf::Transform transform1;
+                transform1.setOrigin( tf::Vector3(1.0, 2.0, 0.0) );
+                tf::Quaternion q;
+                q.setRPY(0, 0, 0);
+                transform1.setRotation(q);
+
+                br.sendTransform(tf::StampedTransform(transform1, ros::Time::now(), "world", this->getName()));
             }
 
         private:
