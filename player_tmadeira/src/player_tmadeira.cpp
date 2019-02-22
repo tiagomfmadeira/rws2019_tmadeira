@@ -179,6 +179,12 @@ namespace tmadeira_ns {
                 float dx = 0.1;
                 float angle = M_PI/6;
 
+                float dx_max = msg->turtle;
+                dx > dx_max ? dx = dx_max : dx = dx;
+
+                double angleMax = M_PI/30;
+                fabs(angle) > fabs(angleMax) ? angle = angleMax * angle / fabs(angle): angle = angle;
+
                 // Define movement in own referential
                 tf::Transform T1;
                 T1.setOrigin( tf::Vector3(dx, 0.0, 0.0) );
@@ -191,7 +197,7 @@ namespace tmadeira_ns {
                 br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
             }
 
-    private:
+        private:
             boost::shared_ptr<Team> team_red;
             boost::shared_ptr<Team> team_blue;
             boost::shared_ptr<Team> team_green;
