@@ -125,6 +125,9 @@ namespace tmadeira_ns {
                 vis_pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
                 *vis_pub = n.advertise<visualization_msgs::Marker>("player_names", 0);
 
+                bocas_pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+                *bocas_pub = n.advertise<visualization_msgs::Marker>("bocas", 0);
+
                 if(team_red->playerBelongsToTeam(name))
                 {
                     team_mine = team_red;
@@ -238,6 +241,7 @@ namespace tmadeira_ns {
 
                 float dx = 10;
                 float angle = angle_to_prey[idx_closest_prey];
+                string prey_name = team_prey->getPlayerNames()[idx_closest_prey];
 
                 float distance_to_arena_center;
                 float angle_to_arena_center;
@@ -268,6 +272,7 @@ namespace tmadeira_ns {
                 tf::Transform Tglobal = T0 * T1;
                 br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", this->getName()));
 
+                // Markers
                 visualization_msgs::Marker marker;
                 marker.header.frame_id = this->getName();
                 marker.header.stamp = ros::Time();
@@ -283,6 +288,23 @@ namespace tmadeira_ns {
                 marker.text = this->getName();
 
                 vis_pub->publish( marker );
+
+                visualization_msgs::Marker bocas_marker;
+                bocas_marker.header.frame_id = this->getName();
+                bocas_marker.header.stamp = ros::Time();
+                bocas_marker.ns = this->getName();
+                bocas_marker.id = 0;
+                bocas_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+                bocas_marker.action = visualization_msgs::Marker::ADD;
+                bocas_marker.scale.z = 0.4;
+                bocas_marker.color.a = 1.0; // Don't forget to set the alpha!
+                bocas_marker.pose.position.y = 0.4;
+                bocas_marker.color.r = 0.0;
+                bocas_marker.color.g = 0.0;
+                bocas_marker.color.b = 0.0;
+                bocas_marker.text = "I'm coming for " + prey_name;
+
+                bocas_pub->publish( bocas_marker );
             }
 
         private:
@@ -297,6 +319,7 @@ namespace tmadeira_ns {
             tf::TransformBroadcaster br;
 
             boost::shared_ptr<ros::Publisher> vis_pub;
+            boost::shared_ptr<ros::Publisher> bocas_pub;
 
             float randomizePosition()
             {
