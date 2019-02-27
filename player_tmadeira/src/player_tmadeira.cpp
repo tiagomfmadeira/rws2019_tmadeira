@@ -278,7 +278,7 @@ namespace tmadeira_ns {
 
                 if (distance_closest_hunter < distance_closest_prey)
                 {
-                    float angle = -angle_to_hunter[idx_closest_prey];
+                    float angle = angle_to_hunter[idx_closest_prey] + M_PI;
                     boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_prey];
                 }
 
@@ -287,7 +287,7 @@ namespace tmadeira_ns {
                 // Compute distance to arena center
                 float distance_to_arena_center;
                 float angle_to_arena_center;
-                // get leach
+                // get leash
                 std::tuple<float, float> t = getDistanceAndAngleToArenaCenter();
                 distance_to_arena_center = std::get<0>(t);
                 angle_to_arena_center = std::get<1>(t);
@@ -295,7 +295,7 @@ namespace tmadeira_ns {
                 if (distance_to_arena_center > 7)
                 {
                     // turn the maximum possible
-                    angle = (angle * M_PI/30) / fabs(angle);
+                    // angle = (angle * M_PI/30) / fabs(angle);
                 }
 
                 // Movement restrictions
@@ -303,7 +303,7 @@ namespace tmadeira_ns {
                 dx > dx_max ? dx = dx_max : dx = dx;
 
                 double angleMax = M_PI/30;
-                fabs(angle) > fabs(angleMax) ? angle = angleMax * angle / fabs(angle): angle = angle;
+                if (angle != 0) fabs(angle) > fabs(angleMax) ? angle = angleMax * angle / fabs(angle): angle = angle;
 
                 // Define movement in own referential
                 tf::Transform T1;
