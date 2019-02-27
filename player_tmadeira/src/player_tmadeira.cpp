@@ -285,31 +285,33 @@ namespace tmadeira_ns {
                 // Compare prey distance to hunter distance
 
                 // Step
-                float dx = 10;
+                float dx = 0;
                 // Angle of step
                 float angle = 0;
 
                 string boca = "";
 
-                // Check distance to hunter?
-                if (distance_closest_hunter < distance_closest_prey)
+                // Is hunter close by?
+                if (distance_closest_hunter < 2 && distance_closest_hunter < distance_closest_prey)
                 {
+                    dx = 10;
                     angle = angle_to_hunter[idx_closest_hunter] + M_PI;
                     boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_hunter];
+
+                    // Check if strat changed to shout
                     if (team_hunters->getPlayerNames()[idx_closest_hunter] != fleeing)
                     {
                         fleeing = team_hunters->getPlayerNames()[idx_closest_hunter];
                         stratChange = true;
                     }
-
-                    // No prey is near but hunter is far away, don't move
-                    if (distance_closest_hunter > 2)
-                        float dx = 0;
                 }
                 else
                 {
+                    dx = 10;
                     angle = angle_to_prey[idx_closest_prey];
                     boca = "Coming for " + team_prey->getPlayerNames()[idx_closest_prey];
+
+                    // Check if strat changed to shout
                     if (team_prey->getPlayerNames()[idx_closest_prey] != hunting)
                     {
                         hunting = team_prey->getPlayerNames()[idx_closest_prey];
