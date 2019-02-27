@@ -287,7 +287,7 @@ namespace tmadeira_ns {
                 float dx = 10;
                 float angle = 0;
                 string boca = "";
-                if (distance_closest_hunter < distance_closest_prey && distance_closest_hunter < 3)
+                if (distance_closest_hunter < distance_closest_prey)
                 {
                     angle = angle_to_hunter[idx_closest_prey] + M_PI;
                     boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_prey];
