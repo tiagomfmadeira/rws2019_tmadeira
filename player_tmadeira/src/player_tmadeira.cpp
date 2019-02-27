@@ -289,11 +289,11 @@ namespace tmadeira_ns {
                 string boca = "";
                 if (distance_closest_hunter < distance_closest_prey)
                 {
-                    angle = angle_to_hunter[idx_closest_prey] + M_PI;
-                    boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_prey];
-                    if (team_hunters->getPlayerNames()[idx_closest_prey] != fleeing)
+                    angle = angle_to_hunter[idx_closest_hunter] + M_PI;
+                    boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_hunter];
+                    if (team_hunters->getPlayerNames()[idx_closest_hunter] != fleeing)
                     {
-                        fleeing = team_hunters->getPlayerNames()[idx_closest_prey];
+                        fleeing = team_hunters->getPlayerNames()[idx_closest_hunter];
                         stratChange = true;
                     }
                 }
