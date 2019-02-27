@@ -361,6 +361,7 @@ namespace tmadeira_ns {
                 bocas_marker.color.b = 0.0;
                 bocas_marker.text = boca;
                 bocas_marker.lifetime = ros::Duration(2);
+                bocas_marker.frame_locked = 1;
 
                 if (stratChange)
                     bocas_pub->publish( bocas_marker );
