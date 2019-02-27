@@ -121,6 +121,9 @@ namespace tmadeira_ns {
                 team_green = (boost::shared_ptr<Team>) new Team("green");
                 team_blue = (boost::shared_ptr<Team>) new Team("blue");
 
+                hunting = "";
+                fleeing = "";
+
                 ros::NodeHandle n;
                 vis_pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
                 *vis_pub = n.advertise<visualization_msgs::Marker>("player_names", 0);
@@ -199,6 +202,7 @@ namespace tmadeira_ns {
             void makeAPlayCallBack(rws2019_msgs::MakeAPlayConstPtr msg)
             {
                 ROS_INFO("Received a new msg");
+                bool stratChange = false;
 
                 // Determine where player is
                 tf::StampedTransform T0;
@@ -216,16 +220,13 @@ namespace tmadeira_ns {
                 // Define strategy of movement
                 // TODO:
 
-                // Find out which prey are alive
-
-
 
                 // Compute closest prey
                 vector<float> distance_to_prey;
                 vector<float> angle_to_prey;
                 for (size_t i =0; i< team_prey->getPlayerNames().size(); i++)
                 {
-                    ROS_WARN_STREAM("team_preys = " << team_prey->getPlayerNames()[i]);
+                    // ROS_WARN_STREAM("team_preys = " << team_prey->getPlayerNames()[i]);
 
                     std::tuple<float, float> t = getDistanceAndAngleToPlayer(team_prey->getPlayerNames()[i]);
                     distance_to_prey.push_back( std::get<0>(t));
@@ -234,7 +235,7 @@ namespace tmadeira_ns {
 
                 int idx_closest_prey = 0;
                 float distance_closest_prey = 1000;
-                for (size_t i =0; i< distance_to_prey.size(); i++)
+                for (size_t i =0; i < distance_to_prey.size(); i++)
                 {
                     if (distance_to_prey[i] < distance_closest_prey)
                     {
@@ -243,17 +244,14 @@ namespace tmadeira_ns {
                     }
                 }
 
-                float dx = 10;
-                float angle = angle_to_prey[idx_closest_prey];
-                string boca = "Coming for " + team_prey->getPlayerNames()[idx_closest_prey];
-
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Compute closest hunter
+
                 vector<float> distance_to_hunter;
                 vector<float> angle_to_hunter;
-                for (size_t i =0; i< team_hunters->getPlayerNames().size(); i++)
+                for (size_t i =0; i < team_hunters->getPlayerNames().size(); i++)
                 {
-                    ROS_WARN_STREAM("team_hunters = " << team_hunters->getPlayerNames()[i]);
+                    // ROS_WARN_STREAM("team_hunters = " << team_hunters->getPlayerNames()[i]);
 
                     std::tuple<float, float> t = getDistanceAndAngleToPlayer(team_hunters->getPlayerNames()[i]);
                     distance_to_hunter.push_back( std::get<0>(t));
@@ -271,20 +269,9 @@ namespace tmadeira_ns {
                     }
                 }
 
-                float angleToHunter = angle_to_hunter[idx_closest_hunter];
-
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Compare prey distance to hunter distance
-
-                if (distance_closest_hunter < distance_closest_prey)
-                {
-                    float angle = angle_to_hunter[idx_closest_prey] + M_PI;
-                    boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_prey];
-                }
-
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
                 // Compute distance to arena center
+
                 float distance_to_arena_center;
                 float angle_to_arena_center;
                 // get leash
@@ -292,11 +279,37 @@ namespace tmadeira_ns {
                 distance_to_arena_center = std::get<0>(t);
                 angle_to_arena_center = std::get<1>(t);
 
-                if (distance_to_arena_center > 7)
+                // use distance_to_arena_center
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Compare prey distance to hunter distance
+
+                float dx = 10;
+                float angle = 0;
+                string boca = "";
+                if (distance_closest_hunter < distance_closest_prey && distance_closest_hunter < 3)
                 {
-                    // turn the maximum possible
-                    // angle = (angle * M_PI/30) / fabs(angle);
+                    angle = angle_to_hunter[idx_closest_prey] + M_PI;
+                    boca = "Running from " + team_hunters->getPlayerNames()[idx_closest_prey];
+                    if (team_hunters->getPlayerNames()[idx_closest_prey] != fleeing)
+                    {
+                        fleeing = team_hunters->getPlayerNames()[idx_closest_prey];
+                        stratChange = true;
+                    }
                 }
+                else
+                {
+                    angle = angle_to_prey[idx_closest_prey];
+                    boca = "Coming for " + team_prey->getPlayerNames()[idx_closest_prey];
+                    if (team_prey->getPlayerNames()[idx_closest_prey] != hunting)
+                    {
+                        hunting = team_prey->getPlayerNames()[idx_closest_prey];
+                        stratChange = true;
+                    }
+                }
+
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 // Movement restrictions
                 float dx_max = msg->turtle;
@@ -347,8 +360,10 @@ namespace tmadeira_ns {
                 bocas_marker.color.g = 0.0;
                 bocas_marker.color.b = 0.0;
                 bocas_marker.text = boca;
+                bocas_marker.lifetime = ros::Duration(2);
 
-                bocas_pub->publish( bocas_marker );
+                if (stratChange)
+                    bocas_pub->publish( bocas_marker );
             }
 
         private:
@@ -362,6 +377,7 @@ namespace tmadeira_ns {
             tf::TransformListener listener;
             tf::TransformBroadcaster br;
 
+            string hunting, fleeing;
             boost::shared_ptr<ros::Publisher> vis_pub;
             boost::shared_ptr<ros::Publisher> bocas_pub;
 
