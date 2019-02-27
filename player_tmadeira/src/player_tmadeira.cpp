@@ -201,7 +201,7 @@ namespace tmadeira_ns {
 
             void makeAPlayCallBack(rws2019_msgs::MakeAPlayConstPtr msg)
             {
-                ROS_INFO("Received a new msg");
+                // ROS_INFO("Received a new msg");
                 bool stratChange = false;
 
                 // Determine where player is
