@@ -284,9 +284,14 @@ namespace tmadeira_ns {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Compare prey distance to hunter distance
 
+                // Step
                 float dx = 10;
+                // Angle of step
                 float angle = 0;
+
                 string boca = "";
+
+                // Check distance to hunter?
                 if (distance_closest_hunter < distance_closest_prey)
                 {
                     angle = angle_to_hunter[idx_closest_hunter] + M_PI;
@@ -296,6 +301,10 @@ namespace tmadeira_ns {
                         fleeing = team_hunters->getPlayerNames()[idx_closest_hunter];
                         stratChange = true;
                     }
+
+                    // No prey is near but hunter is far away, don't move
+                    if (distance_closest_hunter > 2)
+                        float dx = 0;
                 }
                 else
                 {
