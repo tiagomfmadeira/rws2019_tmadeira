@@ -391,7 +391,7 @@ namespace tmadeira_ns {
                     hunting = "";
                     fleeing = team_hunters->getPlayerNames()[idx_closest_hunter];
                     stratChange = true;
-                    voice_pub->publish(sound_request);
+                    // voice_pub->publish(sound_request);
                 }
 
                 boca = "Running from " + fleeing;
@@ -409,7 +409,7 @@ namespace tmadeira_ns {
                     fleeing = "";
                     hunting = team_prey->getPlayerNames()[idx_closest_prey];
                     stratChange = true;
-                    voice_pub->publish(sound_request);
+                    // voice_pub->publish(sound_request);
                 }
 
                 boca = "Coming for " + hunting;
