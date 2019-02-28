@@ -7,6 +7,7 @@
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include <boost/foreach.hpp>
+#include <sound_play/SoundRequest.h>
 
 using namespace std;
 using namespace boost;
@@ -149,6 +150,7 @@ namespace tmadeira_ns {
 
         boost::shared_ptr<ros::Publisher> vis_pub;
         boost::shared_ptr<ros::Publisher> bocas_pub;
+        boost::shared_ptr<ros::Publisher> voice_pub;
 
         boost::shared_ptr<ros::Subscriber> sub;
         boost::shared_ptr<ros::ServiceServer> game_query_srv;
@@ -166,10 +168,6 @@ namespace tmadeira_ns {
          */
         MyPlayer(string name, string team_name) : Player(name)
         {
-            team_red = (boost::shared_ptr<Team>) new Team("red");
-            team_green = (boost::shared_ptr<Team>) new Team("green");
-            team_blue = (boost::shared_ptr<Team>) new Team("blue");
-
             hunting = "";
             fleeing = "";
 
@@ -179,6 +177,19 @@ namespace tmadeira_ns {
 
             bocas_pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
             *bocas_pub = n.advertise<visualization_msgs::Marker>("bocas", 0);
+
+            voice_pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+            *voice_pub = n.advertise<sound_play::SoundRequest>("robotsound", 10);
+
+            sub = boost::shared_ptr<ros::Subscriber> (new ros::Subscriber());
+            *sub = n.subscribe("/make_a_play", 100, &MyPlayer::makeAPlayCallBack, this);
+
+            game_query_srv = boost::shared_ptr<ros::ServiceServer> (new ros::ServiceServer());
+            *game_query_srv = n.advertiseService("/do_the_math", &tmadeira_ns::MyPlayer::doTheMathCallback, this);
+
+            team_red = (boost::shared_ptr<Team>) new Team("red");
+            team_green = (boost::shared_ptr<Team>) new Team("green");
+            team_blue = (boost::shared_ptr<Team>) new Team("blue");
 
             if(team_red->playerBelongsToTeam(name))
             {
@@ -216,15 +227,6 @@ namespace tmadeira_ns {
             br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", name));
             ros::Duration(0.1).sleep();
             br.sendTransform(tf::StampedTransform(Tglobal, ros::Time::now(), "world", name));
-
-            // TODO:
-
-            sub = boost::shared_ptr<ros::Subscriber> (new ros::Subscriber());
-            *sub = n.subscribe("/make_a_play", 100, &MyPlayer::makeAPlayCallBack, this);
-
-            game_query_srv = boost::shared_ptr<ros::ServiceServer> (new ros::ServiceServer());
-            *game_query_srv = n.advertiseService("/do_the_math", &tmadeira_ns::MyPlayer::doTheMathCallback, this);
-
 
             //printInfo();
         }
@@ -366,14 +368,22 @@ namespace tmadeira_ns {
             float angle = 0;
 
             string boca = "";
+            string sound = "";
 
+            // Sound config
+            sound_play::SoundRequest sound_request;
+            sound_request.sound = -3;
+            sound_request.command = 1;
+            sound_request.volume = 1.0;
+            sound_request.arg = sound;
+            sound_request.arg2 = "voice_kal_diphone";
 
-            if (distance_closest_hunter < 3 && distance_closest_hunter < distance_closest_prey)
+            if (distance_closest_hunter < 2 && distance_closest_hunter < distance_closest_prey)
             {   // RUNNING
 
                 dx = 10;
                 // TODO:
-                angle = angle_to_hunter[idx_closest_hunter] + M_PI;
+                angle = -angle_to_hunter[idx_closest_hunter];
 
                 // Check if strat changed to shout
                 if (team_hunters->getPlayerNames()[idx_closest_hunter] != fleeing)
@@ -381,9 +391,11 @@ namespace tmadeira_ns {
                     hunting = "";
                     fleeing = team_hunters->getPlayerNames()[idx_closest_hunter];
                     stratChange = true;
+                    voice_pub->publish(sound_request);
                 }
 
-                boca = "Coming for " + fleeing;
+                boca = "Running from " + fleeing;
+                sound = "tmadeira, leave me alone " + fleeing;
             }
             else
             {   // CHASING
@@ -397,9 +409,11 @@ namespace tmadeira_ns {
                     fleeing = "";
                     hunting = team_prey->getPlayerNames()[idx_closest_prey];
                     stratChange = true;
+                    voice_pub->publish(sound_request);
                 }
 
                 boca = "Coming for " + hunting;
+                sound = "tmadeira, come here " + hunting;
             }
 
 
@@ -461,6 +475,7 @@ namespace tmadeira_ns {
 
             if (stratChange)
                 bocas_pub->publish( bocas_marker );
+
         }
     };
 }

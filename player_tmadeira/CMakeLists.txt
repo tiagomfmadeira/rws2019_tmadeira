@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   rws2019_msgs
   tf
   visualization_msgs
+  sound_play
 )
 
 ## System dependencies are found with CMake's conventions
