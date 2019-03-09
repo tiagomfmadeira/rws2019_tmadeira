@@ -1,6 +1,6 @@
 # rws2019_tmadeira
 ROS WORKSHOP 2019\
-Contains work developed in the scope of a crash course of ROS in LAR at University of Aveiro.
+Contains work developed in the scope of a crash course of ROS at LARDEMUA, University of Aveiro.
 For more information, visit https://github.com/miguelriemoliveira/rws2019_moliveira
 
 ---
