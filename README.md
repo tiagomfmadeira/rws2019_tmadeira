@@ -4,7 +4,6 @@ Contains work developed in the scope of a crash course of ROS in LAR at Universi
 For more information, visit https://github.com/miguelriemoliveira/rws2019_moliveira
 
 ---
----
 
 ## ROS Crash Course Cheat Sheet (Notebook):
 
